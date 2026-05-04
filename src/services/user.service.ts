@@ -22,6 +22,7 @@ export async function createUser(user: UserProfile) {
     emailVerified: false,
     disabled: false,
   });
+  
 
   // Store extra profile fields in Firestore (do NOT store password)
   const db = admin.firestore();

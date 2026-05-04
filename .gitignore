@@ -20,8 +20,6 @@ Thumbs.db
 # VSCode settings
 .vscode/
 
-# Firebase service account keys (never commit these!)
-*.json
 !firebase.json
 
 # Misc
