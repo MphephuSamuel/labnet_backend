@@ -4,10 +4,10 @@ import { requireFirebaseAuth } from "../middleware/require-firebase-auth";
 
 const router = Router();
 
-// Protected: Get devices
-router.get("/", requireFirebaseAuth, getDevices);
+// Route to add a device (protected)
+router.post("/devices", requireFirebaseAuth, addDevice);
 
-// Protected: Add device
-router.post("/", requireFirebaseAuth, addDevice);
+// Route to get all devices (protected)
+router.get("/devices", requireFirebaseAuth, getDevices);
 
 export default router;
