@@ -17,7 +17,7 @@ app.use(meRoutes);
 app.use("/api", alertRoutes); // Add alert routes
 app.use("/sessions", sessionRoutes);
 app.use("/api", deviceRoutes); // Add device routes
-app.use("/history", historyRoutes);
+app.use("/api", historyRoutes);
 
 // Test route
 

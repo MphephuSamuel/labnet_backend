@@ -4,7 +4,7 @@ import { requireFirebaseAuth } from "../middleware/require-firebase-auth";
 
 const router = Router();
 
-router.get("/", requireFirebaseAuth, fetchHistory);
-router.post("/", requireFirebaseAuth, addHistory);
+router.get("/history", requireFirebaseAuth, fetchHistory);
+router.post("/history", requireFirebaseAuth, addHistory);
 
 export default router;
