@@ -14,6 +14,7 @@ import socket
 import subprocess
 import time
 import os
+import sys
 import threading
 import json
 import ctypes
@@ -21,6 +22,10 @@ import platform
 from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
+
+# Configure stdout to handle unicode correctly on Windows
+if sys.stdout and sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 try:
     from scapy.all import ARP, Ether, srp, conf, sniff, IP, TCP, UDP
@@ -40,6 +45,14 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
     print("[!] psutil not found. Bandwidth tracking disabled. Install with: pip install psutil")
+
+try:
+    import socketio
+    SOCKETIO_AVAILABLE = True
+    sio = socketio.Client()
+except ImportError:
+    SOCKETIO_AVAILABLE = False
+    print("[-] python-socketio not found. Real-time streaming disabled. Install with: pip install \"python-socketio[client]\" websocket-client")
 
 
 # ── Config ───────────────────────────────────────────────────────────────────
@@ -189,17 +202,27 @@ def arp_scan(subnet: str, retries: int = 2) -> dict:
         try:
             packet = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=subnet)
             answered, _ = srp(packet, timeout=ARP_TIMEOUT, retry=1)
-            return {rcv.psrc: rcv.hwsrc.upper() for _, rcv in answered}
-        except OSError as e:
-            if attempt < retries - 1:
-                print(f"[!] ARP scan attempt {attempt + 1} failed: {e}. Retrying...")
-                time.sleep(1)
-            else:
-                print(f"[-] ARP scan failed after {retries} attempts: {e}")
-                return {}
+            if answered:
+                return {rcv.psrc: rcv.hwsrc.upper() for _, rcv in answered}
         except Exception as e:
-            print(f"[-] Unexpected error during ARP scan: {e}")
-            return {}
+            pass
+
+    # Fallback to system ARP cache (mostly for Windows without winpcap)
+    try:
+        output = subprocess.check_output("arp -a", shell=True).decode(errors="ignore")
+        devices = {}
+        subnet_prefix = subnet.rsplit(".", 1)[0] if "." in subnet else ""
+        for line in output.splitlines():
+            parts = line.split()
+            if len(parts) >= 3 and parts[0].count(".") == 3 and "-" in parts[1]:
+                ip = parts[0]
+                mac = parts[1].replace("-", ":").upper()
+                if ip.startswith(subnet_prefix + "."):
+                    devices[ip] = mac
+        return devices
+    except Exception as e:
+        print(f"[-] Unexpected error during ARP scan fallback: {e}")
+    return {}
 
 # ── Packet Sniffer ───────────────────────────────────────────────────────────
 
@@ -860,7 +883,8 @@ class BandwidthTracker:
         """
         now = datetime.now().isoformat()
         
-        for mac, bps in self.ema_bandwidth.items():
+        for mac in known_devices:
+            bps = self.get_bps(mac)
             if bps > 0:  # Only record if there's actual traffic
                 if mac not in self.persistent_data:
                     self.persistent_data[mac] = []
@@ -1143,8 +1167,8 @@ def print_bandwidth_stats(tracker):
     total_bps = 0
     device_count = 0
     
-    for mac in tracker.ema_bandwidth:
-        bps = tracker.ema_bandwidth[mac]
+    for mac in tracker.mac_to_ip:
+        bps = tracker.get_bps(mac)
         if bps > 0:
             total_bps += bps
             device_count += 1
@@ -1217,11 +1241,15 @@ def main():
 
     # Start packet sniffer in background thread
     print(f"\n  Starting packet sniffer...")
+    def run_sniffer():
+        try:
+            sniff(prn=sniffer.packet_callback, store=False)
+        except Exception as e:
+            print(f"\n[!] Sniffer failed to start (usually due to missing npcap/winpcap): {e}")
+            print("[!] Bandwidth tracking will use fallback estimation.")
+
     sniffer_thread = threading.Thread(
-        target=lambda: sniff(
-            prn=sniffer.packet_callback,
-            store=False
-        ),
+        target=run_sniffer,
         daemon=True
     )
     sniffer_thread.start()
@@ -1235,7 +1263,13 @@ def main():
             scan_count += 1
             raw = arp_scan(subnet)   # {ip: mac}
 
-            current_macs  = set(raw.values())
+            if not raw and known_devices:
+                # If arp_scan totally fails, do not assume the network vanished!
+                # Keep the current devices so the UI and WebSockets don't flash empty.
+                current_macs = set(known_devices.keys())
+            else:
+                current_macs = set(raw.values())
+
             previous_macs = set(known_devices.keys())
             new_macs      = current_macs - previous_macs
             gone_macs     = previous_macs - current_macs
@@ -1250,6 +1284,7 @@ def main():
                         "hostname":   hostname,
                         "device_type": device_type,
                         "first_seen": datetime.now().strftime("%H:%M:%S"),
+                        "missed_scans": 0,
                     }
                     event_log.append(
                         f"[{datetime.now().strftime('%H:%M:%S')}] "
@@ -1257,9 +1292,16 @@ def main():
                     )
                 else:
                     known_devices[mac]["ip"] = ip   # update if DHCP changed it
+                    known_devices[mac]["missed_scans"] = 0
 
             # Handle devices that left
+            actually_gone_macs = set()
             for mac in gone_macs:
+                known_devices[mac]["missed_scans"] = known_devices[mac].get("missed_scans", 0) + 1
+                if known_devices[mac]["missed_scans"] > 6:
+                    actually_gone_macs.add(mac)
+
+            for mac in actually_gone_macs:
                 info = known_devices.pop(mac)
                 event_log.append(
                     f"[{datetime.now().strftime('%H:%M:%S')}] "
@@ -1312,6 +1354,30 @@ def main():
             print_anomaly_alerts(current_alerts)  # ← Display new alerts
             print_event_log(event_log)
             print(f"  Next scan in {SCAN_INTERVAL}s — Ctrl+C to stop")
+
+            if SOCKETIO_AVAILABLE:
+                try:
+                    if not sio.connected:
+                        sio.connect('http://localhost:3000')
+                    
+                    ws_payload = []
+                    for ip, info in display.items():
+                        mac = info["mac"]
+                        bps = ip_bps.get(ip, 0.0) if ip_bps else tracker.get_bps(mac)
+                        status = "offline" if info.get("missed_scans", 0) > 0 else "active"
+                        ws_payload.append({
+                            "ip": ip,
+                            "mac": mac,
+                            "hostname": info.get("hostname", "N/A"),
+                            "type": info.get("device_type", "Unknown"),
+                            "bandwidth": bps,
+                            "status": status
+                        })
+                    
+                    sio.emit('scanner_update', ws_payload)
+                except Exception as e:
+                    # Silently ignore connection errors so the scanner continues working
+                    pass
 
             time.sleep(SCAN_INTERVAL)
 
