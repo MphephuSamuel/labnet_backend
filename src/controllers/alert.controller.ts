@@ -3,6 +3,16 @@ import { alertService } from "../services/alert.service";
 import { Alert } from "../types/alert";
 import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
 import { CreateAlert } from "../types/alert";
+import { initializeFirebaseAdmin } from "../utils/firebase-admin";
+
+// Define AuthenticatedRequest as a temporary type alias
+export type AuthenticatedRequest = Request & {
+  user?: {
+    uid: string;
+    email?: string;
+    [key: string]: any;
+  };
+};
 
 // Add an alert
 export const addAlert = async (req: Request, res: Response) => {
@@ -34,13 +44,28 @@ export const addAlert = async (req: Request, res: Response) => {
   res.status(201).json(alert);
 };
 
-// Retrieve all alerts
-export const getAlerts = async (req: Request, res: Response) => {
+// Retrieve all alerts for authenticated user
+export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
+  const user = req.user;
+  if (!user?.uid) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
-    const alerts = await alertService.getAlerts(); // Await the service call
-    res.status(200).json(alerts); // Send the alerts as a JSON array
+    const admin = initializeFirebaseAdmin();
+    const db = admin.firestore();
+    const alertsSnapshot = await db
+      .collection("alerts")
+      .where("userId", "==", user.uid)
+      .get();
+
+    const alerts = alertsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    return res.status(200).json(alerts);
   } catch (error) {
     console.error("Error retrieving alerts:", error);
-    res.status(500).json({ error: "Failed to retrieve alerts" });
+    return res.status(500).json({ error: "Failed to retrieve alerts" });
   }
 };

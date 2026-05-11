@@ -5,19 +5,9 @@ import { initializeFirebaseAdmin } from "../utils/firebase-admin";
 // =========================
 // ADD DEVICE (CREATE)
 // =========================
-export const addDevice = async (
-  req: AuthenticatedRequest,
-  res: Response
-) => {
+export const addDevice = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const {
-      deviceType,
-      deviceName,
-      ip,
-      mac,
-      bandwidth,
-      status,
-    } = req.body;
+    const { deviceType, deviceName, ip, mac, bandwidth, status } = req.body;
 
     const user = req.user;
 
@@ -52,17 +42,22 @@ export const addDevice = async (
 };
 
 // =========================
-// GET ALL DEVICES
+// GET ALL DEVICES FOR AUTHENTICATED USER
 // =========================
-export const getDevices = async (
-  req: AuthenticatedRequest,
-  res: Response
-) => {
+export const getDevices = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const admin = initializeFirebaseAdmin();
     const db = admin.firestore();
 
-    const snapshot = await db.collection("devices").get();
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const snapshot = await db
+      .collection("devices")
+      .where("userId", "==", user.uid)
+      .get();
 
     const devices: any[] = [];
 

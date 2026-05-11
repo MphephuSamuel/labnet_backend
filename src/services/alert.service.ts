@@ -21,6 +21,12 @@ export class AlertService {
     const snapshot = await this.collection.get(); // Removed orderBy to ensure compatibility
     return snapshot.docs.map((doc) => doc.data() as Alert);
   }
+
+  // Retrieve alerts for a specific user
+  async getAlertsByUser(userId: string): Promise<Alert[]> {
+    const snapshot = await this.collection.where("userId", "==", userId).get();
+    return snapshot.docs.map((doc) => doc.data() as Alert);
+  }
 }
 
 export const alertService = new AlertService();
