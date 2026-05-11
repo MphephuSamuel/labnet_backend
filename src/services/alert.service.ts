@@ -18,7 +18,7 @@ export class AlertService {
 
   // Retrieve all alerts
   async getAlerts(): Promise<Alert[]> {
-    const snapshot = await this.collection.get(); // Removed orderBy to ensure compatibility
+    const snapshot = await this.collection.get();
     return snapshot.docs.map((doc) => doc.data() as Alert);
   }
 
