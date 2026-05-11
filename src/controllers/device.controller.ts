@@ -61,7 +61,7 @@ export const getDevices = async (req: AuthenticatedRequest, res: Response) => {
 
     const devices: any[] = [];
 
-    snapshot.forEach((doc) => {
+    snapshot.forEach((doc: any) => {
       devices.push({
         id: doc.id,
         ...doc.data(),
