@@ -16,27 +16,20 @@ export type AuthenticatedRequest = Request & {
 
 // Add an alert
 export const addAlert = async (req: Request, res: Response) => {
-  const { type, deviceId, createdAt, description, hostName, severity } =
+  const { title, description, device, ip, time, severity } =
     req.body as CreateAlert;
 
-  if (
-    !type ||
-    !deviceId ||
-    !createdAt ||
-    !description ||
-    !hostName ||
-    !severity
-  ) {
+  if (!title || !description || !device || !ip || !time || !severity) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
   const newAlert: Alert = {
     id: uuidv4(),
-    type,
-    deviceId,
-    createdAt: new Date(createdAt),
+    title,
     description,
-    hostName,
+    device,
+    ip,
+    time,
     severity,
   };
 
@@ -56,7 +49,6 @@ export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
     const db = admin.firestore();
     const alertsSnapshot = await db
       .collection("alerts")
-      .where("userId", "==", user.uid)
       .get();
 
     const alerts = alertsSnapshot.docs.map((doc) => ({
