@@ -18,3 +18,10 @@ export interface DeviceTrafficInfo {
   bytesReceived: number;
   timestamp: Date;
 }
+
+export interface AggregatedTraffic {
+  numDevices: number;
+  totalBandwidth: number;
+  avgBandwidth: number;
+  timestamp: Date;
+}
