@@ -19,7 +19,7 @@ app.use("/api", alertRoutes); // Add alert routes
 app.use("/sessions", sessionRoutes);
 app.use("/api", deviceRoutes); // Add device routes
 app.use("/history", historyRoutes);
-app.use("/api", trafficRoutes); // Add traffic routes
+app.use("/band", trafficRoutes); // Add traffic routes
 
 // Test route
 
