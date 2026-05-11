@@ -26,7 +26,7 @@ export async function getAllDevices(): Promise<Device[]> {
 
   const snapshot = await db.collection("devices").get();
   const devices: Device[] = [];
-  snapshot.forEach((doc) => {
+  snapshot.forEach((doc: any) => {
     devices.push(doc.data() as Device);
   });
 
@@ -53,7 +53,7 @@ export async function getSessionsByDeviceId(deviceId: string): Promise<Session[]
 
   const snapshot = await db.collection("sessions").where("deviceId", "==", deviceId).get();
   const sessions: Session[] = [];
-  snapshot.forEach((doc) => {
+  snapshot.forEach((doc: any) => {
     sessions.push(doc.data() as Session);
   });
 
@@ -67,7 +67,7 @@ export async function getAllSessions(): Promise<Session[]> {
 
   const snapshot = await db.collection("sessions").get();
   const sessions: Session[] = [];
-  snapshot.forEach((doc) => {
+  snapshot.forEach((doc: any) => {
     sessions.push(doc.data() as Session);
   });
 
