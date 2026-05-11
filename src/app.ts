@@ -1,6 +1,7 @@
 import express from "express";
 import signupRoutes from "./routes/signup.routes";
 import meRoutes from "./routes/me.routes";
+import alertRoutes from "./routes/alert.routes";
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json());
 // Routes
 app.use(signupRoutes);
 app.use(meRoutes);
+app.use("/api", alertRoutes); // Add alert routes
 
 // Test route
 
