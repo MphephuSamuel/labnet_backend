@@ -35,7 +35,12 @@ export const addAlert = async (req: Request, res: Response) => {
 };
 
 // Retrieve all alerts
-export const getAlerts = (req: Request, res: Response) => {
-  const alerts = alertService.getAlerts();
-  res.status(200).json(alerts);
+export const getAlerts = async (req: Request, res: Response) => {
+  try {
+    const alerts = await alertService.getAlerts(); // Await the service call
+    res.status(200).json(alerts); // Send the alerts as a JSON array
+  } catch (error) {
+    console.error("Error retrieving alerts:", error);
+    res.status(500).json({ error: "Failed to retrieve alerts" });
+  }
 };
