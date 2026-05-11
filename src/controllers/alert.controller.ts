@@ -3,6 +3,7 @@ import { alertService } from "../services/alert.service";
 import { Alert } from "../types/alert";
 import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
 import { CreateAlert } from "../types/alert";
+import { AuthenticatedRequest } from "../types/authenticated-request";
 
 // Add an alert
 export const addAlert = async (req: Request, res: Response) => {
@@ -34,11 +35,16 @@ export const addAlert = async (req: Request, res: Response) => {
   res.status(201).json(alert);
 };
 
-// Retrieve all alerts
-export const getAlerts = async (req: Request, res: Response) => {
+// Retrieve all alerts for authenticated user
+export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const alerts = await alertService.getAlerts(); // Await the service call
-    res.status(200).json(alerts); // Send the alerts as a JSON array
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const alerts = await alertService.getAlertsByUser(user.uid); // Filter alerts by userId
+    res.status(200).json(alerts);
   } catch (error) {
     console.error("Error retrieving alerts:", error);
     res.status(500).json({ error: "Failed to retrieve alerts" });
