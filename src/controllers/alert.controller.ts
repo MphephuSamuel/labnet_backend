@@ -3,7 +3,7 @@ import { alertService } from "../services/alert.service";
 import { Alert } from "../types/alert";
 import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
 import { CreateAlert } from "../types/alert";
-import { initializeFirebaseAdmin } from "../utils/firebase-admin";
+import admin from "../utils/firebase-admin";
 
 // Define AuthenticatedRequest as a temporary type alias
 export type AuthenticatedRequest = Request & {
@@ -45,7 +45,6 @@ export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
   }
 
   try {
-    const admin = initializeFirebaseAdmin();
     const db = admin.firestore();
     const alertsSnapshot = await db
       .collection("alerts")

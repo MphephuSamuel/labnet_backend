@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../types/auth-request";
-import { initializeFirebaseAdmin } from "../utils/firebase-admin";
+import admin from "../utils/firebase-admin";
 
 // =========================
 // ADD DEVICE (CREATE)
@@ -10,8 +10,6 @@ export const addDevice = async (req: AuthenticatedRequest, res: Response) => {
     const { deviceType, deviceName, ip, mac, bandwidth, status } = req.body;
 
     const user = req.user;
-
-    const admin = initializeFirebaseAdmin();
     const db = admin.firestore();
 
     const deviceData = {
@@ -46,7 +44,6 @@ export const addDevice = async (req: AuthenticatedRequest, res: Response) => {
 // =========================
 export const getDevices = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const admin = initializeFirebaseAdmin();
     const db = admin.firestore();
 
     const user = req.user;

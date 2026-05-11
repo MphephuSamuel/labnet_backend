@@ -1,5 +1,5 @@
 import { NextFunction, Response } from "express";
-import { initializeFirebaseAdmin } from "../utils/firebase-admin";
+import admin from "../utils/firebase-admin";
 import { AuthenticatedRequest } from "../types/auth-request";
 
 export async function requireFirebaseAuth(
@@ -16,7 +16,6 @@ export async function requireFirebaseAuth(
   const token = header.slice("Bearer ".length);
 
   try {
-    const admin = initializeFirebaseAdmin();
     const decoded = await admin.auth().verifyIdToken(token);
 
     req.user = {

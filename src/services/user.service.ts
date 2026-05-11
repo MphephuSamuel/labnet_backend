@@ -1,8 +1,4 @@
-import admin from "firebase-admin";
-import { initializeFirebaseAdmin } from "../utils/firebase-admin";
-
-// Ensure Firebase Admin is initialized before any service call
-initializeFirebaseAdmin();
+import admin from "../utils/firebase-admin";
 
 export interface UserProfile {
   firstName: string;

@@ -5,11 +5,13 @@ import meRoutes from "./routes/me.routes";
 import alertRoutes from "./routes/alert.routes";
 import deviceRoutes from "./routes/device.routes";
 import historyRoutes from "./routes/history.routes";
+import settingsRoutes from "./routes/settings.routes";
 
 const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(settingsRoutes);
 
 // Routes
 app.use(signupRoutes);

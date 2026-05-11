@@ -1,9 +1,5 @@
-import admin from "firebase-admin";
-import { initializeFirebaseAdmin } from "../utils/firebase-admin";
+import admin from "../utils/firebase-admin";
 import { Alert } from "../types/alert";
-
-// Ensure Firebase Admin is initialized before any service call
-initializeFirebaseAdmin();
 
 const db = admin.firestore();
 
