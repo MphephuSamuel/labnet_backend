@@ -2,6 +2,7 @@ import express from "express";
 import deviceRoutes from "./routes/device.routes";
 import signupRoutes from "./routes/signup.routes";
 import meRoutes from "./routes/me.routes";
+import scannerRoutes from "./routes/scanner.routes";
 
 const app = express();
 
@@ -12,8 +13,7 @@ app.use(express.json());
 app.use(signupRoutes);
 app.use(meRoutes);
 app.use("/devices", deviceRoutes);
-
-// Test route
+app.use("/api", scannerRoutes);
 
 // Health/test endpoint
 app.get("/test", (req, res) => {
