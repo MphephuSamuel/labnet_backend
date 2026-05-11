@@ -5,6 +5,7 @@ import meRoutes from "./routes/me.routes";
 import alertRoutes from "./routes/alert.routes";
 import deviceRoutes from "./routes/device.routes";
 import historyRoutes from "./routes/history.routes";
+import anomalyRoutes from "./routes/anomaly.routes";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use("/api", alertRoutes); // Add alert routes
 app.use("/sessions", sessionRoutes);
 app.use("/api", deviceRoutes); // Add device routes
 app.use("/history", historyRoutes);
+app.use("/anomalies", anomalyRoutes);
 
 // Test route
 
