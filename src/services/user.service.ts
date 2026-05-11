@@ -1,8 +1,10 @@
 import admin from "firebase-admin";
 import { initializeFirebaseAdmin } from "../utils/firebase-admin";
 
-// Ensure Firebase Admin is initialized before any service call
-initializeFirebaseAdmin();
+const getFirebaseAdmin = () => {
+  initializeFirebaseAdmin();
+  return admin;
+};
 
 export interface UserProfile {
   firstName: string;
@@ -16,7 +18,8 @@ export interface UserProfile {
 // Create user in Firebase Auth and store profile in Firestore
 export async function createUser(user: UserProfile) {
   // Create user in Firebase Auth (with password)
-  const fbUser = await admin.auth().createUser({
+  const firebaseAdmin = getFirebaseAdmin();
+  const fbUser = await firebaseAdmin.auth().createUser({
     email: user.email,
     password: user.password,
     emailVerified: false,
@@ -25,7 +28,7 @@ export async function createUser(user: UserProfile) {
   
 
   // Store extra profile fields in Firestore (do NOT store password)
-  const db = admin.firestore();
+  const db = firebaseAdmin.firestore();
   await db.collection("users").doc(fbUser.uid).set({
     firstName: user.firstName,
     secondName: user.secondName,
@@ -33,7 +36,7 @@ export async function createUser(user: UserProfile) {
     role: user.role,
     email: user.email,
     uid: fbUser.uid,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
   });
 
   // Do not return password
