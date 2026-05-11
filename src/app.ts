@@ -25,11 +25,5 @@ app.use("/api", scannerRoutes);
 app.get("/test", (req, res) => {
   res.json({ status: "ok", message: "LabNet Backend is running" });
 });
->>>>>>> development
-
-// Health/test endpoint
-app.get("/test", (req, res) => {
-  res.json({ status: "ok", message: "LabNet Backend is running" });
-});
 
 export default app;
