@@ -26,3 +26,10 @@ Thumbs.db
 *.log
 __pycache__/
 *.pyc
+scanner/myenv/
+scanner/__pycache__/
+*.pyc
+scanner/labnguardian_data/
+*.py[cod]
+__pycache__
+scanner/__pycache__/scan_network_api.cpython-313.pyc
