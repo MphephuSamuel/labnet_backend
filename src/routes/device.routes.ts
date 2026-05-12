@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { addDevice, getDevices } from "../controllers/device.controller";
+import {
+  addDevice,
+  getDevices,
+  syncDevices,
+} from "../controllers/device.controller";
 import { requireFirebaseAuth } from "../middleware/require-firebase-auth";
 
 const router = Router();
@@ -9,5 +13,8 @@ router.post("/devices", requireFirebaseAuth, addDevice);
 
 // Route to get all devices (protected)
 router.get("/devices", requireFirebaseAuth, getDevices);
+
+// Sync devices
+router.post("/devices/sync", syncDevices);
 
 export default router;

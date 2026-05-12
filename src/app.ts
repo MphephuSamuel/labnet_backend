@@ -21,12 +21,11 @@ app.use("/api", alertRoutes);
 app.use("/sessions", sessionRoutes);
 app.use("/api", deviceRoutes);
 app.use("/api", deviceRoutes); // Add device routes
-app.use("/history", historyRoutes);
+app.use("/api", historyRoutes);
 app.use("/api", trafficRoutes); // Add traffic routes
 //app.use("/api", historyRoutes);
 
 // Test route
-app.use("/history", historyRoutes);
 app.use("/anomalies", anomalyRoutes);
 
 // app.use("/api", scannerRoutes);
