@@ -19,12 +19,12 @@ const io = new Server(httpServer, {
   }
 });
 
-io.on("connection", (socket) => {
+io.on("connection", (socket: any) => {
   console.log(`⚡ Client connected: ${socket.id}`);
 
-  // When the python scanner sends an update
-  socket.on("scanner_update", (data) => {
-    // Broadcast to all other connected clients (like Flutter app)
+  // Python scanner sends updates here
+  socket.on("scanner_update", (data: any) => {
+    // Broadcast to all other clients (Flutter dashboard, etc.)
     socket.broadcast.emit("network_update", data);
   });
 
