@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from "../types/auth-request";
 import { initializeFirebaseAdmin } from "../utils/firebase-admin";
 import { createAnomaly } from "../services/anomaly.service";
 import { AnomalyType, Severity } from "../types/anomaly";
+import { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
 const admin = initializeFirebaseAdmin();
 const db = admin.firestore();
@@ -10,7 +11,7 @@ const db = admin.firestore();
 // CREATE ANOMALY
 export const createAnomalyController = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const user = req.user;
@@ -49,7 +50,7 @@ export const createAnomalyController = async (
 // GET ANOMALIES
 export const getAnomalies = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const user = req.user;
@@ -64,7 +65,7 @@ export const getAnomalies = async (
       .orderBy("createdAt", "desc")
       .get();
 
-    const anomalies = snapshot.docs.map((doc) => ({
+    const anomalies = snapshot.docs.map((doc: QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data(),
     }));

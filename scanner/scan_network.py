@@ -1355,28 +1355,37 @@ def main():
             print_event_log(event_log)
             print(f"  Next scan in {SCAN_INTERVAL}s — Ctrl+C to stop")
 
+            ws_payload = []
+            for ip, info in display.items():
+                mac = info["mac"]
+                bps = ip_bps.get(ip, 0.0) if ip_bps else tracker.get_bps(mac)
+                status = "offline" if info.get("missed_scans", 0) > 0 else "active"
+                ws_payload.append({
+                    "ip": ip,
+                    "mac": mac,
+                    "hostname": info.get("hostname", "N/A"),
+                    "type": info.get("device_type", "Unknown"),
+                    "bandwidth": bps,
+                    "status": status
+                })
+
             if SOCKETIO_AVAILABLE:
                 try:
                     if not sio.connected:
                         sio.connect('http://localhost:3000')
-                    
-                    ws_payload = []
-                    for ip, info in display.items():
-                        mac = info["mac"]
-                        bps = ip_bps.get(ip, 0.0) if ip_bps else tracker.get_bps(mac)
-                        status = "offline" if info.get("missed_scans", 0) > 0 else "active"
-                        ws_payload.append({
-                            "ip": ip,
-                            "mac": mac,
-                            "hostname": info.get("hostname", "N/A"),
-                            "type": info.get("device_type", "Unknown"),
-                            "bandwidth": bps,
-                            "status": status
-                        })
-                    
                     sio.emit('scanner_update', ws_payload)
                 except Exception as e:
                     # Silently ignore connection errors so the scanner continues working
+                    pass
+
+            if REQUESTS_AVAILABLE:
+                try:
+                    requests.post(
+                        'http://localhost:3000/api/devices/sync',
+                        json={"devices": ws_payload},
+                        timeout=2
+                    )
+                except Exception as e:
                     pass
 
             time.sleep(SCAN_INTERVAL)
