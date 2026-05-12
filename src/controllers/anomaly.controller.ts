@@ -64,10 +64,10 @@ export const getAnomalies = async (
       .orderBy("createdAt", "desc")
       .get();
 
-    const anomalies = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const anomalies = snapshot.docs.map((doc: any) => ({
+  id: doc.id,
+  ...doc.data(),
+}));
 
     return res.json({ anomalies });
   } catch (error) {

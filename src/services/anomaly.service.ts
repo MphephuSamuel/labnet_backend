@@ -1,5 +1,6 @@
 import { initializeFirebaseAdmin } from "../utils/firebase-admin";
 import { Anomaly } from "../types/anomaly";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
 const admin = initializeFirebaseAdmin();
 const db = admin.firestore();
