@@ -35,6 +35,27 @@ echo [3/4] Installing Python requirements...
 call myenv\Scripts\activate.bat
 pip install -r requirements.txt
 
+:: --- Detect LAN IP via ipconfig (skip Autoconfiguration/VPN IPs like 169.254.x.x) ---
+set "LOCALIP="
+for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /V "Autoconfiguration" ^| findstr "IPv4 Address"') do (
+    for /f "tokens=* delims= " %%B in ("%%A") do set "LOCALIP=%%B"
+    goto :got_local_ip
+)
+:got_local_ip
+
+if not defined LOCALIP (
+    echo Could not detect local IP; skipping env update.
+) else (
+    echo Detected local IP: %LOCALIP%
+    set "FLUTTER_ENV_PATH=..\labnet_guardian\.env"
+    if exist "%FLUTTER_ENV_PATH%" (
+        powershell -NoProfile -Command "(Get-Content '%FLUTTER_ENV_PATH%') -replace '^BACKEND_URL=.*', 'BACKEND_URL=http://%LOCALIP%:3000' | Set-Content '%FLUTTER_ENV_PATH%'"
+    ) else (
+        echo BACKEND_URL=http://%LOCALIP%:3000>"%FLUTTER_ENV_PATH%"
+    )
+    echo Updated %FLUTTER_ENV_PATH% with http://%LOCALIP%:3000
+)
+
 echo.
 echo [4/4] Starting Services...
 
