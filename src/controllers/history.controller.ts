@@ -6,13 +6,7 @@ export const addHistory = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user;
 
-    const {
-      deviceType,
-      hostName,
-      ip,
-      title,
-      type,
-    } = req.body;
+    const { deviceType, hostName, ip, title, type } = req.body;
 
     const id = await saveHistory({
       deviceType,
@@ -20,7 +14,6 @@ export const addHistory = async (req: AuthenticatedRequest, res: Response) => {
       ip,
       title,
       type,
-      userId: user?.uid,
     });
 
     return res.status(201).json({
@@ -34,7 +27,10 @@ export const addHistory = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-export const fetchHistory = async (req: AuthenticatedRequest, res: Response) => {
+export const fetchHistory = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const data = await getHistory();
 

@@ -47,11 +47,16 @@ export async function saveSession(session: Session): Promise<string> {
 }
 
 // Get sessions by deviceId from Firestore
-export async function getSessionsByDeviceId(deviceId: string): Promise<Session[]> {
+export async function getSessionsByDeviceId(
+  deviceId: string,
+): Promise<Session[]> {
   const adminClient = getFirebaseAdmin();
   const db = admin.firestore();
 
-  const snapshot = await db.collection("sessions").where("deviceId", "==", deviceId).get();
+  const snapshot = await db
+    .collection("sessions")
+    .where("deviceId", "==", deviceId)
+    .get();
   const sessions: Session[] = [];
   snapshot.forEach((doc: any) => {
     sessions.push(doc.data() as Session);
@@ -73,3 +78,36 @@ export async function getAllSessions(): Promise<Session[]> {
 
   return sessions;
 }
+
+// Check and insert devices
+export const checkAndInsertDevices = async (devices: any[]) => {
+  const db = admin.firestore();
+  const batch = db.batch();
+  const newDevices = [];
+
+  for (const device of devices) {
+    const { ip, mac, hostname, type, bandwidth, status } = device;
+
+    const deviceRef = db.collection("devices").doc(mac);
+    const existingDevice = await deviceRef.get();
+
+    if (!existingDevice.exists) {
+      const deviceData = {
+        ip,
+        mac,
+        hostname: hostname || "N/A",
+        type: type || "Unknown",
+        bandwidth: bandwidth || 0,
+        status: status || "inactive",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastSeen: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      batch.set(deviceRef, deviceData);
+      newDevices.push(deviceData);
+    }
+  }
+
+  await batch.commit();
+  return newDevices;
+};
