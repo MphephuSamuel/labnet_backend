@@ -8,7 +8,10 @@ import deviceRoutes from "./routes/device.routes";
 import historyRoutes from "./routes/history.routes";
 import anomalyRoutes from "./routes/anomaly.routes";
 import trafficRoutes from "./routes/traffic.routes";
+<<<<<<< HEAD
 import threatRoutes from "./routes/threat.routes";
+=======
+>>>>>>> 43f2a2d2c360f29b05025e68e7c5d9b10da7f006
 
 const app = express();
 
@@ -22,13 +25,16 @@ app.use("/api", alertRoutes);
 app.use("/sessions", sessionRoutes);
 app.use("/api", deviceRoutes);
 app.use("/api", deviceRoutes); // Add device routes
-app.use("/history", historyRoutes);
+app.use("/api", historyRoutes);
 app.use("/api", trafficRoutes); // Add traffic routes
 app.use("/threats", threatRoutes);
 //app.use("/api", historyRoutes);
 
 // Test route
+<<<<<<< HEAD
 app.use("/history", historyRoutes);
+=======
+>>>>>>> 43f2a2d2c360f29b05025e68e7c5d9b10da7f006
 app.use("/anomalies", anomalyRoutes);
 
 // app.use("/api", scannerRoutes);
