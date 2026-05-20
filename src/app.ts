@@ -8,6 +8,7 @@ import deviceRoutes from "./routes/device.routes";
 import historyRoutes from "./routes/history.routes";
 import anomalyRoutes from "./routes/anomaly.routes";
 import trafficRoutes from "./routes/traffic.routes";
+import settingsRoutes from "./routes/settings.routes";
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use("/api", deviceRoutes);
 app.use("/api", deviceRoutes); // Add device routes
 app.use("/api", historyRoutes);
 app.use("/api", trafficRoutes); // Add traffic routes
+app.use("/api/users/me", settingsRoutes); // Add settings routes
 //app.use("/api", historyRoutes);
 
 // Test route
