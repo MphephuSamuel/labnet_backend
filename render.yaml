@@ -2,8 +2,9 @@ services:
   - type: web
     name: labnet-guardian-backend
     runtime: node
+    plan: free
     repo: https://github.com/MphephuSamuel/labnet_backend
-    branch: development
+    branch: feature/dashboard
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
