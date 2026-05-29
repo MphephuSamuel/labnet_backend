@@ -58,6 +58,7 @@ INSTRUCTIONS:
   • "Are there any security issues?" → queries for alerts and anomalies
 - When the user is just chatting, greeting, or asking about LabNet features, return mode "chat".
 - You are friendly, concise, and security-aware.
+- You may use bold asterisks (e.g. **important**) to highlight key devices, IPs, or alert severities. Use simple line breaks and hyphens (-) for bullet points. Do not use headings (#).
 - Always return EXACTLY ONE valid JSON object with this shape:
 
 {
@@ -109,6 +110,7 @@ Please provide a helpful, concise, natural-language summary that combines insigh
 - Include specific numbers and device names/IPs where relevant.
 - Keep it conversational but informative.
 - Do NOT return JSON — return a plain text answer.
+- You may use bold asterisks (e.g. **important**) to highlight key devices, IPs, or alert severities. Use simple line breaks and hyphens (-) for bullet points. Do not use headings (#).
 `;
 }
 
@@ -230,9 +232,7 @@ async function fetchHistory(
   filters?: Record<string, unknown>,
 ): Promise<{ data: unknown[]; total: number }> {
   const db = getDb();
-  let query: FirebaseFirestore.Query = db
-    .collection("history")
-    .orderBy("createdAt", "desc");
+  let query: FirebaseFirestore.Query = db.collection("history");
 
   if (filters?.type) {
     query = query.where("type", "==", String(filters.type).toLowerCase());
@@ -240,6 +240,13 @@ async function fetchHistory(
 
   const snapshot = await query.get();
   let results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+
+  // Sort in memory to avoid requiring a composite index in Firestore
+  results.sort((a: any, b: any) => {
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return timeB - timeA;
+  });
 
   if (filters?.ip) {
     const ipFilter = String(filters.ip);
