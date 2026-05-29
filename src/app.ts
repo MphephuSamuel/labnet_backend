@@ -8,8 +8,12 @@ import historyRoutes from "./routes/history.routes";
 import anomalyRoutes from "./routes/anomaly.routes";
 import trafficRoutes from "./routes/traffic.routes";
 import settingsRoutes from "./routes/settings.routes";
+
 import analyticsRoutes from "./routes/analytics.routes";
 import cors from "cors";
+
+import aiRoutes from "./routes/ai.routes";
+
 
 const app = express();
 
@@ -21,11 +25,24 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
+
 // Logging middleware
 app.use((req, res, next) => {
   console.log(`📝 ${req.method} ${req.url}`);
   next();
 });
+// Routes
+app.use(signupRoutes);
+app.use(meRoutes);
+app.use("/api", alertRoutes);
+app.use("/sessions", sessionRoutes);
+app.use("/api", deviceRoutes);
+app.use("/api", deviceRoutes); // Add device routes
+app.use("/api", historyRoutes);
+app.use("/api", trafficRoutes); // Add traffic routes
+app.use("/api/users/me", settingsRoutes); // Add settings routes
+app.use("/api", aiRoutes);
+//app.use("/api", historyRoutes);
 
 // Test route
 app.get("/test", (req, res) => {
@@ -51,3 +68,4 @@ app.use((req, res) => {
 });
 
 export default app;
+

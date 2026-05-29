@@ -13,7 +13,7 @@ export async function requireFirebaseAuth(
     return res.status(401).json({ message: "Missing Firebase token" });
   }
 
-  const token = header.slice("Bearer ".length);
+  const token = header.slice("Bearer ".length).trim();
 
   try {
     const admin = initializeFirebaseAdmin();
