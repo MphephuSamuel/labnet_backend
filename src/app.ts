@@ -60,6 +60,7 @@ app.use("/anomalies", anomalyRoutes);
 app.use(signupRoutes);
 app.use(meRoutes);
 app.use("/api/users/me", settingsRoutes);
+app.use("/anomalies", anomalyRoutes);
 
 // 404 handler
 app.use((req, res) => {
