@@ -26,8 +26,59 @@ function getDb() {
 
 // ── System prompt ───────────────────────────────────────────────────
 
+const APP_HELP_CONTEXT = `
+LabNet Guardian app overview:
+
+Navigation:
+- The primary navigation is the bottom tab bar with five main sections.
+- A top bar provides notifications, theme toggle, and avatar access to Profile & Settings.
+- The left app drawer contains secondary items such as account management, sign-out, and support.
+
+Dashboard:
+- Shows overall system health with total devices, average bandwidth, threats blocked, and anomalies.
+- Includes a Network Health card, recent anomalies or activity, and quick actions such as Analytics and Refresh.
+
+Devices:
+- Lists connected devices in real time with name, IP, MAC, status, and badges.
+- Includes search and filters for Total, New, and Suspicious.
+- Device cards open details and context actions like logs, investigation, and defensive actions.
+
+Alerts:
+- Shows security events with tabs for All, Critical, Warning, and Info.
+- Each alert card includes title, subtitle, and severity badge.
+- Supports pull-to-refresh and actions like acknowledge, investigate, and escalate.
+
+History:
+- Works as the audit log and activity trail, grouped by date.
+- Search filters entries and cards show who, what, when, and a short description.
+
+Advanced Search:
+- Finds devices, IP addresses, MAC addresses, and alerts by keyword.
+- Results can include device cards and alert cards, with filters for type or severity.
+
+Profile & Settings:
+- Profile lets users view or edit name, display name, avatar, and role.
+- Settings controls anomaly detection, detection sensitivity, auto-blocking, whitelist management, and notification preferences.
+
+Common controls and patterns:
+- Search fields appear in Dashboard, Devices, History, and Advanced Search.
+- Cards open details, primary actions use gradient buttons, and status badges show live/offline or severity.
+- Lists support pull-to-refresh where live data is expected.
+
+Typical tasks:
+- Find a device: use Advanced Search or Devices search with an IP, MAC, or device name.
+- Respond to an incident: open Alerts, choose Critical or Warning, then acknowledge or investigate.
+- Review activity: open History and search or browse by date.
+- Whitelist a device or IP: open Settings and add a trusted IP range or MAC.
+- Change detection sensitivity: open Settings and adjust the slider.
+`;
+
 const SYSTEM_PROMPT = `
 You are LabNet Assistant — the AI helper for LabNet Guardian, a network security monitoring system.
+
+Use the app help context below when the user asks how to use the app, what something on the UI means, where a feature lives, or how to complete an in-app task.
+
+${APP_HELP_CONTEXT}
 
 LabNet tracks the following data in its database:
 
@@ -51,6 +102,7 @@ LabNet tracks the following data in its database:
 
 ────────────────────────────────────────────────────────
 INSTRUCTIONS:
+- For general app questions, UI descriptions, onboarding, and how-to questions, answer from the app help context in natural language and keep mode "chat".
 - When the user asks about data, return mode "data" and fill in the queries array.
 - A single question may need data from MULTIPLE entities. For example:
   • "Give me a network overview" → queries for devices, alerts, and traffic
@@ -131,7 +183,10 @@ async function fetchAlerts(
   }
 
   const snapshot = await query.get();
-  let results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+  let results = snapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   // Apply client-side filters that Firestore can't handle well together
   if (filters?.device) {
@@ -165,7 +220,10 @@ async function fetchDevices(
   }
 
   const snapshot = await query.get();
-  let results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+  let results = snapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   if (filters?.ip) {
     const ipFilter = String(filters.ip);
@@ -193,7 +251,10 @@ async function fetchSessions(
   }
 
   const snapshot = await query.get();
-  let results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+  let results = snapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   if (filters?.anomaly !== undefined) {
     const wantAnomaly = Boolean(filters.anomaly);
@@ -222,7 +283,10 @@ async function fetchAnomalies(
   }
 
   const snapshot = await query.get();
-  const results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+  const results = snapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   const total = results.length;
   return { data: results.slice(0, DATA_LIMIT), total };
@@ -239,7 +303,10 @@ async function fetchHistory(
   }
 
   const snapshot = await query.get();
-  let results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+  let results = snapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   // Sort in memory to avoid requiring a composite index in Firestore
   results.sort((a: any, b: any) => {
@@ -265,7 +332,10 @@ async function fetchTraffic(): Promise<{ data: unknown[]; total: number }> {
     .limit(10)
     .get();
 
-  const results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+  const results = snapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
   return { data: results, total: results.length };
 }
 
@@ -273,7 +343,9 @@ async function fetchTraffic(): Promise<{ data: unknown[]; total: number }> {
 
 const ENTITY_FETCHERS: Record<
   AIEntity,
-  (filters?: Record<string, unknown>) => Promise<{ data: unknown[]; total: number }>
+  (
+    filters?: Record<string, unknown>,
+  ) => Promise<{ data: unknown[]; total: number }>
 > = {
   alerts: fetchAlerts,
   devices: fetchDevices,
@@ -305,10 +377,7 @@ export class AIService {
       model: "llama-3.1-8b-instant",
       temperature: 0,
       response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...conversation,
-      ],
+      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...conversation],
     });
 
     const rawContent = intentCompletion.choices?.[0]?.message?.content;
@@ -320,7 +389,11 @@ export class AIService {
 
     // ── Chat mode — return immediately ──────────────────────────────
 
-    if (intent.mode === "chat" || !intent.queries || intent.queries.length === 0) {
+    if (
+      intent.mode === "chat" ||
+      !intent.queries ||
+      intent.queries.length === 0
+    ) {
       return { mode: "chat", reply: intent.reply };
     }
 
@@ -332,7 +405,11 @@ export class AIService {
   // ── Fetch from Firestore (multi-entity) then ask the LLM to summarise ─
 
   private async fetchAndSummarise(
-    queries: Array<{ entity: AIEntity; operation: string; filters?: Record<string, unknown> }>,
+    queries: Array<{
+      entity: AIEntity;
+      operation: string;
+      filters?: Record<string, unknown>;
+    }>,
     conversation: Array<{ role: "user" | "assistant"; content: string }>,
   ): Promise<AIChatResponse> {
     // Fetch all entities in parallel
@@ -348,7 +425,8 @@ export class AIService {
     );
 
     // Build a map of entity → { data, total }
-    const entityDataMap: Record<string, { data: unknown[]; total: number }> = {};
+    const entityDataMap: Record<string, { data: unknown[]; total: number }> =
+      {};
     const entities: AIEntity[] = [];
 
     for (const result of fetchResults) {
@@ -378,7 +456,10 @@ export class AIService {
           content: buildSummarisationPrompt(entityDataMap),
         },
         // Include the last user message for context
-        ...(conversation.slice(-2) as Array<{ role: "user" | "assistant"; content: string }>),
+        ...(conversation.slice(-2) as Array<{
+          role: "user" | "assistant";
+          content: string;
+        }>),
       ],
     });
 
