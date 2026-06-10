@@ -8,23 +8,24 @@ import historyRoutes from "./routes/history.routes";
 import anomalyRoutes from "./routes/anomaly.routes";
 import trafficRoutes from "./routes/traffic.routes";
 import settingsRoutes from "./routes/settings.routes";
+import passwordRoutes from "./routes/passwordRoutes";
 
 import analyticsRoutes from "./routes/analytics.routes";
 import cors from "cors";
 
 import aiRoutes from "./routes/ai.routes";
 
-
 const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -42,6 +43,7 @@ app.use("/api", historyRoutes);
 app.use("/api", trafficRoutes); // Add traffic routes
 app.use("/api/users/me", settingsRoutes); // Add settings routes
 app.use("/api", aiRoutes);
+app.use("/api", passwordRoutes);
 //app.use("/api", historyRoutes);
 
 // Test route
@@ -69,4 +71,3 @@ app.use((req, res) => {
 });
 
 export default app;
-
