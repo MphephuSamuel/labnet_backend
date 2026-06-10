@@ -11,9 +11,14 @@ const getFirebaseAdmin = () => {
 export interface UserProfile {
   firstName: string;
   secondName: string;
-  surname: string;
+  lastName: string;
   role: string;
   email: string;
+}
+
+export interface StoredUserProfile extends UserProfile {
+  uid: string;
+  createdAt?: unknown;
 }
 
 // Create user in Firebase Auth and store profile in Firestore
@@ -36,7 +41,7 @@ export async function createUser(user: UserProfile) {
     await db.collection("users").doc(fbUser.uid).set({
       firstName: user.firstName,
       secondName: user.secondName,
-      surname: user.surname,
+      lastName: user.lastName,
       role: user.role,
       email: user.email,
       uid: fbUser.uid,
@@ -66,4 +71,25 @@ export async function createUser(user: UserProfile) {
 
     throw error;
   }
+}
+
+export async function getAllUsers(): Promise<StoredUserProfile[]> {
+  const firebaseAdmin = getFirebaseAdmin();
+  const db = firebaseAdmin.firestore();
+  const snapshot = await db.collection("users").get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data() as Omit<StoredUserProfile, "uid"> & {
+      uid?: string;
+    };
+    return {
+      uid: data.uid ?? doc.id,
+      firstName: data.firstName,
+      secondName: data.secondName,
+      lastName: data.lastName,
+      role: data.role,
+      email: data.email,
+      createdAt: data.createdAt,
+    };
+  });
 }

@@ -62,12 +62,18 @@ labnet_backend/
     {
       "firstName": "John",
       "secondName": "Michael",
-      "surname": "Doe",
+      "lastName": "Doe",
       "role": "admin",
       "email": "john.doe@example.com"
     }
     ```
   - **Description:** Creates a new user in Firebase Auth, stores profile info in Firestore, generates a password automatically, and emails the login credentials through Brevo. No authentication required.
+
+### Users List
+
+- `GET /users`
+  - **Headers:** `Authorization: Bearer <firebase_id_token>`
+  - **Description:** Returns all users stored in Firestore.
 
 ### Device Endpoints
 
