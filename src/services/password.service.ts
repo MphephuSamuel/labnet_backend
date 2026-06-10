@@ -2,7 +2,7 @@ import { initializeFirebaseAdmin } from "../utils/firebase-admin";
 import { sendPasswordResetEmail } from "./email.service";
 
 const DEFAULT_CONTINUE_URL =
-  "https://app.labnetguardian.example/reset-password";
+  "http://localhost:3000/reset-redirect.html";
 
 export interface PasswordChangeInput {
   uid: string;
@@ -48,33 +48,43 @@ async function verifyOldPassword(email: string, oldPassword: string) {
 
 export async function requestPasswordReset(email: string) {
   const firebaseAdmin = initializeFirebaseAdmin();
-  const db = firebaseAdmin.firestore();
-  const userDoc = await db
-    .collection("users")
-    .where("email", "==", email)
-    .limit(1)
-    .get();
+  try {
+    // 1. Get the user from Firebase Auth (handles case-insensitivity automatically)
+    const userRecord = await firebaseAdmin.auth().getUserByEmail(email);
 
-  if (userDoc.empty) {
-    return {
-      message: "If the email exists, a password reset link has been sent.",
-    };
-  }
+    // 2. Fetch the corresponding Firestore profile using the unique UID
+    const db = firebaseAdmin.firestore();
+    const userDoc = await db.collection("users").doc(userRecord.uid).get();
 
-  const userData = userDoc.docs[0].data() as { firstName?: string };
-  const resetLink = await firebaseAdmin
-    .auth()
-    .generatePasswordResetLink(email, {
-      url: getPasswordResetContinueUrl(),
-      handleCodeInApp: false,
+    let firstName = "there";
+    if (userDoc.exists) {
+      const userData = userDoc.data() as { firstName?: string };
+      firstName = userData.firstName || "there";
+    }
+
+    // 3. Generate password reset link
+    const resetLink = await firebaseAdmin
+      .auth()
+      .generatePasswordResetLink(email, {
+        url: getPasswordResetContinueUrl(),
+        handleCodeInApp: false,
+      });
+
+    // 4. Send the reset email
+    await sendPasswordResetEmail({
+      to: email,
+      firstName,
+      email,
+      resetUrl: resetLink,
     });
-
-  await sendPasswordResetEmail({
-    to: email,
-    firstName: userData.firstName || "there",
-    email,
-    resetUrl: resetLink,
-  });
+  } catch (error: any) {
+    // If user is not found or mail sending fails, log warning but don't fail the request
+    // to prevent email enumeration probing
+    console.warn(
+      `Password reset process for email: ${email} completed with status:`,
+      error.message || error,
+    );
+  }
 
   return {
     message: "If the email exists, a password reset link has been sent.",
