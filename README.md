@@ -69,6 +69,29 @@ labnet_backend/
     ```
   - **Description:** Creates a new user in Firebase Auth, stores profile info in Firestore, generates a password automatically, and emails the login credentials through Brevo. No authentication required.
 
+### Password Management
+
+- `POST /api/users/password/forgot`
+  - **Body (JSON):**
+    ```json
+    {
+      "email": "john.doe@example.com"
+    }
+    ```
+  - **Description:** Generates a Firebase password reset link and emails it to the user. The link uses `PASSWORD_RESET_CONTINUE_URL` or `APP_PUBLIC_URL` as the continue URL.
+
+- `PUT /api/users/me/password`
+  - **Headers:** `Authorization: Bearer <firebase_id_token>`
+  - **Body (JSON):**
+    ```json
+    {
+      "oldPassword": "CurrentPass123!",
+      "newPassword": "NewPass123!",
+      "confirmPassword": "NewPass123!"
+    }
+    ```
+  - **Description:** Uses the Firebase ID token to identify the user, verifies the current password through Firebase Auth, and updates the password if the old password is correct.
+
 ### Users List
 
 - `GET /users`
@@ -86,6 +109,9 @@ labnet_backend/
 - `FIREBASE_CLIENT_EMAIL` — Firebase Admin service account email
 - `FIREBASE_PRIVATE_KEY` — Firebase Admin private key (use `\n` for newlines)
 - `BREVO_API_KEY` — Brevo transactional email API key
+- `FIREBASE_WEB_API_KEY` — Firebase web API key used to verify the current password during password changes
+- `PASSWORD_RESET_CONTINUE_URL` — Continue URL used when generating the Firebase reset link
+- `APP_PUBLIC_URL` — Optional fallback base URL used when building password reset links
 
 ## Folder Explanations
 

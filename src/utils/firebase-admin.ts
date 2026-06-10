@@ -13,12 +13,20 @@ export function initializeFirebaseAdmin() {
 
   // For development: allow running without Firebase credentials
   if (!projectId || !clientEmail || !privateKey) {
-    console.warn("⚠️ Firebase Admin credentials not found. Running in development mode without Firebase.");
+    console.warn(
+      "⚠️ Firebase Admin credentials not found. Running in development mode without Firebase.",
+    );
     // Create a minimal mock that prevents Firebase errors
     const mockAdmin = {
       auth: () => ({
-        verifyIdToken: async () => ({ uid: 'dev-user', email: 'dev@example.com' }),
-        createCustomToken: async () => 'dev-token',
+        verifyIdToken: async () => ({
+          uid: "dev-user",
+          email: "dev@example.com",
+        }),
+        createCustomToken: async () => "dev-token",
+        updateUser: async () => ({}),
+        generatePasswordResetLink: async () =>
+          "https://example.com/reset-password-link",
       }),
       firestore: () => ({
         collection: () => ({
