@@ -32,6 +32,8 @@ export const createAnomalyController = async (
     };
 
     const docRef = await db.collection("anomalies").add(anomaly);
+    
+    console.log(`✅ Anomaly created for user ${user.uid}: ${message}`);
 
     return res.status(201).json({
       message: "Anomaly created",
@@ -53,10 +55,12 @@ export const getAnomalies = async (
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Removed orderBy to avoid index requirement
+    console.log(`📊 Fetching ALL anomalies (no user filter)`);
+
+    // Get ALL anomalies without user filter
     const snapshot = await db
       .collection("anomalies")
-      .where("userId", "==", user.uid)
+      .orderBy("createdAt", "desc")
       .limit(100)
       .get();
 
@@ -65,9 +69,110 @@ export const getAnomalies = async (
       ...doc.data(),
     }));
 
+    console.log(`📊 Found ${anomalies.length} anomalies total`);
     return res.json({ anomalies });
+    
   } catch (error) {
     console.error("getAnomalies error:", error);
-    return res.json({ anomalies: [] });
+    
+    // Fallback: without orderBy
+    try {
+      const snapshot = await db
+        .collection("anomalies")
+        .limit(100)
+        .get();
+
+      const anomalies = snapshot.docs.map((doc: QueryDocumentSnapshot) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      console.log(`📊 Found ${anomalies.length} anomalies total (fallback query)`);
+      return res.json({ anomalies });
+      
+    } catch (fallbackError) {
+      console.error("getAnomalies fallback error:", fallbackError);
+      return res.json({ anomalies: [] });
+    }
+  }
+};
+
+export const deleteAnomaly = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+    const { id } = req.params;
+    
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const anomalyDoc = await db.collection("anomalies").doc(id).get();
+    
+    if (!anomalyDoc.exists) {
+      return res.status(404).json({ message: "Anomaly not found" });
+    }
+    
+    const anomalyData = anomalyDoc.data();
+    
+    // Check ownership for deletion
+    if (anomalyData?.userId !== user.uid) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    
+    await db.collection("anomalies").doc(id).delete();
+    
+    console.log(`✅ Anomaly ${id} deleted for user ${user.uid}`);
+    
+    return res.json({ message: "Anomaly deleted successfully" });
+  } catch (error) {
+    console.error("deleteAnomaly error:", error);
+    return res.status(500).json({ message: "Failed to delete anomaly" });
+  }
+};
+
+export const updateAnomaly = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+    const { id } = req.params;
+    const { status, resolution } = req.body;
+    
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const anomalyDoc = await db.collection("anomalies").doc(id).get();
+    
+    if (!anomalyDoc.exists) {
+      return res.status(404).json({ message: "Anomaly not found" });
+    }
+    
+    const anomalyData = anomalyDoc.data();
+    
+    // Check ownership for update
+    if (anomalyData?.userId !== user.uid) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    
+    const updateData: any = {
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    
+    if (status) updateData.status = status;
+    if (resolution) updateData.resolution = resolution;
+    
+    await db.collection("anomalies").doc(id).update(updateData);
+    
+    console.log(`✅ Anomaly ${id} updated for user ${user.uid}`);
+    
+    return res.json({ message: "Anomaly updated successfully" });
+  } catch (error) {
+    console.error("updateAnomaly error:", error);
+    return res.status(500).json({ message: "Failed to update anomaly" });
   }
 };
