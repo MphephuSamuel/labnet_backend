@@ -17,6 +17,9 @@ import aiRoutes from "./routes/ai.routes";
 
 const app = express();
 
+// Serve static files
+app.use(express.static("public"));
+
 // Middleware
 app.use(express.json());
 app.use(
