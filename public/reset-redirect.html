@@ -42,8 +42,18 @@
           }
         }
 
-        // Try to open the installed app
-        window.location.href = appUrl;
+        const triggerRedirect = () => {
+          window.location.href = appUrl;
+        };
+
+        // Try to open the installed app after DOM is ready to prevent browser blocks
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(triggerRedirect, 500);
+          });
+        } else {
+          setTimeout(triggerRedirect, 500);
+        }
 
         // Fallback: after a short delay, show friendly message and open button
         setTimeout(() => {
@@ -56,7 +66,7 @@
           ${oobCode ? `<p style="font-size:12px; color:#9E9EB8; margin-top:20px;">Verification Code: <code>${oobCode}</code></p>` : ""}
         `;
           document.body.appendChild(fallback);
-        }, 1200);
+        }, 1500);
       })();
     </script>
   </body>
