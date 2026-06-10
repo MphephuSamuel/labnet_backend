@@ -1,11 +1,17 @@
-import express from "express";
-import { createAnomalyController, getAnomalies } from "../controllers/anomaly.controller";
-import { verifyFirebaseToken } from "../middleware/auth.middleware";
+import { Router } from "express";
+import { 
+  createAnomalyController, 
+  getAnomalies,
+  deleteAnomaly,
+  updateAnomaly
+} from "../controllers/anomaly.controller";
+import { requireFirebaseAuth } from "../middleware/require-firebase-auth";
 
-const router = express.Router();
+const router = Router();
 
-// protect routes
-router.post("/", verifyFirebaseToken, createAnomalyController);
-router.get("/", verifyFirebaseToken, getAnomalies);
+router.post("/", requireFirebaseAuth, createAnomalyController);
+router.get("/", requireFirebaseAuth, getAnomalies);
+router.delete("/:id", requireFirebaseAuth, deleteAnomaly);
+router.put("/:id", requireFirebaseAuth, updateAnomaly);
 
 export default router;
