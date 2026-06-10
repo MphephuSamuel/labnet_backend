@@ -32,26 +32,28 @@
           params.get("code");
         const email = params.get("email");
 
-        if (!oobCode) {
-          document.getElementById("msg").innerText =
-            "Invalid password reset link.";
-          return;
-        }
-
-        // Custom app scheme — update if your app uses a different scheme
+        // Custom app scheme
         const appScheme = "labnetguardian";
-        const appUrl = `${appScheme}://reset?oobCode=${encodeURIComponent(oobCode)}${email ? `&email=${encodeURIComponent(email)}` : ""}`;
+        let appUrl = `${appScheme}://reset`;
+        if (oobCode) {
+          appUrl += `?oobCode=${encodeURIComponent(oobCode)}`;
+          if (email) {
+            appUrl += `&email=${encodeURIComponent(email)}`;
+          }
+        }
 
         // Try to open the installed app
         window.location.href = appUrl;
 
-        // Fallback: after a short delay, show the raw link and instructions
+        // Fallback: after a short delay, show friendly message and open button
         setTimeout(() => {
           const fallback = document.createElement("div");
+          fallback.style.marginTop = "20px";
           fallback.innerHTML = `
-          <p>If the app did not open, copy this link and open it on your device with the app installed:</p>
-          <p><a href="${appUrl}">${appUrl}</a></p>
-          <p>Or open the app and paste the code: <code>${oobCode}</code></p>
+          <p>Your password reset process is complete!</p>
+          <p>If the app did not open automatically, click the button below:</p>
+          <p><a href="${appUrl}" style="display:inline-block; padding:12px 24px; background:#7B2FBE; color:white; text-decoration:none; border-radius:30px; font-weight:bold; box-shadow: 0 4px 10px rgba(123,47,190,0.3);">Open LabNet Guardian</a></p>
+          ${oobCode ? `<p style="font-size:12px; color:#9E9EB8; margin-top:20px;">Verification Code: <code>${oobCode}</code></p>` : ""}
         `;
           document.body.appendChild(fallback);
         }, 1200);
