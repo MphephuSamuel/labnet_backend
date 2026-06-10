@@ -33,6 +33,7 @@ labnet_backend/
      - `FIREBASE_PROJECT_ID`
      - `FIREBASE_CLIENT_EMAIL`
      - `FIREBASE_PRIVATE_KEY`
+     - `BREVO_API_KEY`
    - Set `PORT` if you want a custom port (default is 3000).
 4. **Build the project:**
    ```sh
@@ -63,11 +64,10 @@ labnet_backend/
       "secondName": "Michael",
       "surname": "Doe",
       "role": "admin",
-      "email": "john.doe@example.com",
-      "password": "yourStrongPassword123"
+      "email": "john.doe@example.com"
     }
     ```
-  - **Description:** Creates a new user in Firebase Auth and stores profile info in Firestore. No authentication required.
+  - **Description:** Creates a new user in Firebase Auth, stores profile info in Firestore, generates a password automatically, and emails the login credentials through Brevo. No authentication required.
 
 ### Device Endpoints
 
@@ -79,6 +79,7 @@ labnet_backend/
 - `FIREBASE_PROJECT_ID` — Your Firebase project ID
 - `FIREBASE_CLIENT_EMAIL` — Firebase Admin service account email
 - `FIREBASE_PRIVATE_KEY` — Firebase Admin private key (use `\n` for newlines)
+- `BREVO_API_KEY` — Brevo transactional email API key
 
 ## Folder Explanations
 
@@ -86,7 +87,8 @@ labnet_backend/
 - **routes/**: Define API endpoints and attach controllers/middleware.
 - **services/**: Business logic, e.g., user creation in Firebase.
 - **middleware/**: Express middleware (e.g., authentication checks).
-- **utils/**: Utility modules, such as Firebase Admin initialization.
+- **utils/**: Utility modules, such as Firebase Admin initialization, password generation, and mail sending.
+- **templates/emails/**: EJS email templates.
 - **types/**: Custom TypeScript type definitions.
 
 ## Notes

@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 import { createUser, UserProfile } from "../services/user.service";
 
 export const signup = async (req: Request, res: Response) => {
-  const { firstName, secondName, surname, role, email, password } = req.body;
+  const { firstName, secondName, surname, role, email } = req.body;
 
-  if (!firstName || !secondName || !surname || !role || !email || !password) {
+  if (!firstName || !secondName || !surname || !role || !email) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
@@ -14,7 +14,6 @@ export const signup = async (req: Request, res: Response) => {
     surname,
     role,
     email,
-    password,
   };
   try {
     const created = await createUser(user);
